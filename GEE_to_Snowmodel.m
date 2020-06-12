@@ -43,12 +43,12 @@ FLAG_LR=0;          %set to 1 if you want to compute lapse rates / adjustment
                     %factors from PRISM data (typically only needed once)
 
 %give location of folder containing files from GEE
-pathname='/Users/aragon/Documents/OSU/CSO/WY/GEE2';
+pathname='/Volumes/dfh/Aragon2/CSOdmn/WA';
 
 %Info re: the files names out of Crumley GEE script
 %give the 'root' pathname of the met files. Note: we will append things like _elev.tif,
 % _prec.tif, and so on...
-filename='cfsv2_2014-10-01_2019-09-30';
+filename='cfsv2_2014-09-01_2019-09-01';
 
 %give names of dem and land cover
 demname='DEM_WY.tif';
@@ -431,21 +431,27 @@ end
 
 if FLAG_LR
     
+    %create a text file to store lapse rates 
+    fileID = fopen(strcat(pathname,'/lapse_rates.txt'),'w');
+    
     %load DEM.
     [DEM,R_dem]=geotiffread(fullfile(pathname,demname));
     
     %do temp first
+    fprintf(fileID,'temp lapse rates\n');
     months={'jan' 'feb' 'mar' 'apr' 'may' 'jun' 'jul' 'aug' 'sep' 'oct' 'nov' 'dec'};
     disp(' ')
     for j=1:length(months);
         [tmean,R]=geotiffread(fullfile(pathname,[months{j} 'tmean.tif']));
         p=polyfit(double(DEM(:))/1000,tmean(:),1); %div by 1000 to make deg / km.
         temp_lapse(j)=-p(1);    %use neg to make a pos number. See micromet.f for explanation.
-        disp(['absolute value ' months{j} ' temp lapse rate (deg / km) = ' num2str(temp_lapse(j),2)])  
+        disp(['absolute value ' months{1} ' temp lapse rate (deg / km) = ' num2str(temp_lapse(j),2)])
+        fprintf(fileID,strcat('absolute value ',months{1},' temp lapse rate (deg / km) = ',num2str(temp_lapse(j),2),'\n'));
     end
     disp(' ');
     
     %do precip next
+    fprintf(fileID,'precip lapse rates\n');
     for j=1:length(months)
         [ppt,R]=geotiffread(fullfile(pathname,[months{j} 'ppt.tif']));
         % this one is a bit tricky. Essentially, Liston uses something like
@@ -459,5 +465,9 @@ if FLAG_LR
         p=polyfit(double(DEM(:))/1000,log(ppt(:)),1); %div by 1000 to make deg / km.
         precip_lapse(j)=p(1)/2;    %use neg to make a pos number. See micromet.f for explanation.
         disp([months{j} ' precip adjustment factor (1/km) = ' num2str(precip_lapse(j),2)])
+        fprintf(fileID,strcat(months{j},' precip adjustment factor (1/km) = ',num2str(precip_lapse(j),2),'\n'));
     end
+    
+    % close text file
+    fclose(fileID);
 end
