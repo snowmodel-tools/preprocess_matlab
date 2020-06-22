@@ -59,7 +59,7 @@ lcname='NLCD2016_WY.tif';
 domain='WY';
 
 %give the desired output name of the met file
-outfilename='mm_wy_2014-2019.dat'; %please use something descriptive to help identify the output file.
+outfilename='mm_WY_2014-2019.dat'; %please use something descriptive to help identify the output file.
 
 %give start time information
 startyear=2014;
