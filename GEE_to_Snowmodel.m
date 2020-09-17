@@ -34,7 +34,7 @@ clc
 %%%%% begin user input
 
 FLAG_MET=1;         %set to 1 if you want to convert meteo forcing (most common task)
-FLAG_MET_EXTRA=1;   %set to 1 if you want incoming LWR & SWR
+FLAG_MET_EXTRA=0;   %set to 1 if you want incoming LWR & SWR
 FLAG_DEM_LC=0;      %set to 1 if you want to convert DEM and 
                     %Land Cover (typically only needed once)
 FLAG_DEM_EXTRA=0;   %set to 1 if you want the 'extra' lon/lat grids 
@@ -43,12 +43,12 @@ FLAG_LR=0;          %set to 1 if you want to compute lapse rates / adjustment
                     %factors from PRISM data (typically only needed once)
 
 %give location of folder containing files from GEE
-pathname='/Users/aragon/Documents/OSU/CSO/WY/GEE2';
+pathname='/Volumes/dfh-1/Hill/GOA_snowmodel/CFSv2_GOA_met_inputs_from_GEE/2020';
 
 %Info re: the files names out of Crumley GEE script
 %give the 'root' pathname of the met files. Note: we will append things like _elev.tif,
 % _prec.tif, and so on...
-filename='cfsv2_2014-10-01_2019-09-30';
+filename='cfsv2_2020-09-01';
 
 %give names of dem and land cover
 demname='DEM_WY.tif';
@@ -56,14 +56,14 @@ lcname='NLCD2016_WY.tif';
 
 %give name of domain (e.g., GOA, or Thompson_Pass, or something like that).
 %This will only be used for option lat / lon grids.
-domain='WY';
+domain='GOA';
 
 %give the desired output name of the met file
-outfilename='mm_wy_2014-2019.dat'; %please use something descriptive to help identify the output file.
+outfilename='mm_goa_2018-2020.dat'; %please use something descriptive to help identify the output file.
 
 %give start time information
-startyear=2014;
-startmonth=10;
+startyear=2018;
+startmonth=9;
 startday=1;
 pointsperday=4; %use 4 for 6-hourly data, 8 for 3-hourly data, etc.
 starthour=0;
