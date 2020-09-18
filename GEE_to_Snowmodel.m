@@ -1,6 +1,6 @@
 %This script will read in geotiff files as downloaded from Google Earth
 %Engine (that workflow is by Ryan Crumley - crumleyr@oregonstate.edu)
-%and it will reformat them into the format required for Micromet/Snowmodel. 
+%and it will reformat them into the format required for Micromet/Snowmodel.
 %The GEE script from Crumley outputs:
 %   1. xxx_elev.tif  -  elevation of CFSv2 nodes
 %   2. xxx_prec.tif  -  precipitation at CFSv2 nodes
@@ -29,26 +29,27 @@ clear all
 close all
 clc
 
-%% USER INPUT SECTION 
+%% USER INPUT SECTION
 
 %%%%% begin user input
 
 FLAG_MET=1;         %set to 1 if you want to convert meteo forcing (most common task)
-FLAG_MET_EXTRA=1;   %set to 1 if you want incoming LWR & SWR
-FLAG_DEM_LC=0;      %set to 1 if you want to convert DEM and 
+FLAG_MET_EXTRA=0;   %set to 1 if you want incoming LWR & SWR
+FLAG_DEM_LC=0;      %set to 1 if you want to convert DEM and
                     %Land Cover (typically only needed once)
-FLAG_DEM_EXTRA=0;   %set to 1 if you want the 'extra' lon/lat grids 
+FLAG_DEM_EXTRA=0;   %set to 1 if you want the 'extra' lon/lat grids
                     %for large domains (typically only needed once)
 FLAG_LR=0;          %set to 1 if you want to compute lapse rates / adjustment
                     %factors from PRISM data (typically only needed once)
 
 %give location of folder containing files from GEE
-pathname='/Volumes/dfh/Aragon2/CSOdmn/WA';
+pathname='/Volumes/dfh-1/Hill/GOA_snowmodel/CFSv2_GOA_met_inputs_from_GEE/2020';
 
 %Info re: the files names out of Crumley GEE script
 %give the 'root' pathname of the met files. Note: we will append things like _elev.tif,
 % _prec.tif, and so on...
-filename='cfsv2_2014-09-01_2019-09-01';
+
+filename='cfsv2_2020-09-01';
 
 %give names of dem and land cover
 demname='DEM_WY.tif';
@@ -56,14 +57,14 @@ lcname='NLCD2016_WY.tif';
 
 %give name of domain (e.g., GOA, or Thompson_Pass, or something like that).
 %This will only be used for option lat / lon grids.
-domain='WY';
+domain='GOA';
 
 %give the desired output name of the met file
-outfilename='mm_wy_2014-2019.dat'; %please use something descriptive to help identify the output file.
+outfilename='mm_goa_2018-2020.dat'; %please use something descriptive to help identify the output file.
 
 %give start time information
-startyear=2014;
-startmonth=10;
+startyear=2018;
+startmonth=9;
 startday=1;
 pointsperday=4; %use 4 for 6-hourly data, 8 for 3-hourly data, etc.
 starthour=0;
@@ -156,7 +157,10 @@ if FLAG_MET
 
         %compute wind direction. 0-360, with 0 being true north! 90 east, etc.
         DIRtmp=atan2d(Utmp,Vtmp);
-        DIRtmp(DIRtmp<=0)=DIRtmp(DIRtmp<=0)+360;
+        I=find(DIRtmp>=180);
+        J=find(DIRtmp<180);
+        DIRtmp(I)=DIRtmp(I)-180;
+        DIRtmp(J)=DIRtmp(J)+180;
 
         %put T in C
         Ttmp=Ttmp-273.16;
@@ -177,20 +181,20 @@ if FLAG_MET
         end
     end
     fclose(fid);
-end  
-    
+end
+
 %% In this section, we will deal with the climate data files
 %load files. All the Rs should be the same, but I read them in as different
 %references anyway.
 
 if FLAG_MET_EXTRA
-    
+
     tmpfile=[filename '_elev.tif']; % m
     [Z,R_z]=geotiffread(fullfile(pathname,tmpfile));
 
     tmpfile=[filename '_swr.tif']; % W/m^2
     [S,R_s]=geotiffread(fullfile(pathname,tmpfile));
-    
+
 
     tmpfile=[filename '_lwr.tif']; % W/m^2
     [L,R_l]=geotiffread(fullfile(pathname,tmpfile));
@@ -254,7 +258,7 @@ if FLAG_MET_EXTRA
         end
     end
     fclose(fid);
-    
+
     %we are now ready to begin loop over the time steps.
     fid=fopen(fullfile(pathname,'longwave.dat'),'w');
 
@@ -282,8 +286,8 @@ if FLAG_MET_EXTRA
         end
     end
     fclose(fid);
-end  
-    
+end
+
 %% In this section, let us read in the DEM file and convert it to ESRI ASCII format
 % snowmodel can use DEM as a grads file too, but I prefer to just use ascii
 
@@ -303,7 +307,7 @@ if FLAG_DEM_LC
     arcgridwrite(fullfile(pathname,[demname(1:end-3) 'asc']),x,y,DEM,'grid_mapping','center','precision',0);
 end
 
-%% In this section, let us read in the land cover grid, convert values to the values 
+%% In this section, let us read in the land cover grid, convert values to the values
 %required by liston, and then write out ESRI ASCII land cover grid for
 %snowmodel. Snowmodel can use land cover as a grads file too, but I prefer to just use ascii
 
@@ -321,7 +325,7 @@ if FLAG_DEM_LC
     y=Y(:,1);
 
     %we need to adjust codes from NLCD2016 to be consistent with expectations
-    %for snowmodel. 
+    %for snowmodel.
 
     %NLCD2016
     % 11 - open water
@@ -351,26 +355,26 @@ if FLAG_DEM_LC
     %   3  mixed forest            14.00  aspen/spruce-fir/low taiga  forest
     %   4  scattered short-conifer  8.00  pinyon-juniper              forest
     %   5  clearcut conifer         4.00  stumps and regenerating     forest
-    %  
+    %
     %   6  mesic upland shrub       0.50  deeper soils, less rocky    shrub
     %   7  xeric upland shrub       0.25  rocky, windblown soils      shrub
     %   8  playa shrubland          1.00  greasewood, saltbush        shrub
     %   9  shrub wetland/riparian   1.75  willow along streams        shrub
     %  10  erect shrub tundra       0.65  arctic shrubland            shrub
     %  11  low shrub tundra         0.30  low to medium arctic shrubs shrub
-    %  
+    %
     %  12  grassland rangeland      0.15  graminoids and forbs        grass
     %  13  subalpine meadow         0.25  meadows below treeline      grass
     %  14  tundra (non-tussock)     0.15  alpine, high arctic         grass
     %  15  tundra (tussock)         0.20  graminoid and dwarf shrubs  grass
     %  16  prostrate shrub tundra   0.10  graminoid dominated         grass
     %  17  arctic gram. wetland     0.20  grassy wetlands, wet tundra grass
-    %  
+    %
     %  18  bare                     0.01                              bare
-    % 
+    %
     %  19  water/possibly frozen    0.01                              water
     %  20  permanent snow/glacier   0.01                              water
-    %  
+    %
     %  21  residential/urban        0.01                              human
     %  22  tall crops               0.40  e.g., corn stubble          human
     %  23  short crops              0.25  e.g., wheat stubble         human
@@ -398,8 +402,8 @@ if FLAG_DEM_LC
     LC(LC==90)=9;
     LC(LC==95)=9;
     arcgridwrite(fullfile(pathname,[lcname(1:end-3) 'asc']),x,y,LC,'grid_mapping','center','precision',0);
-end    
-    
+end
+
 %% In this section we write out the optional files containing lat / lon values.
 % Either grads or ascii is acceptable. I prefer ascii...
 
@@ -412,16 +416,16 @@ if FLAG_DEM_EXTRA
     proj=geotiffinfo(fullfile(pathname,demname));
     %convert projection info to mapping structure
     mstruct=geotiff2mstruct(proj);
-    
+
     %create matrices and vectors of x and y values
     info=geotiffinfo(fullfile(pathname,demname));
     [X,Y]=pixcenters(info,'makegrid');
     x=X(1,:);
     y=Y(:,1);
-    
+
     %convert coords from projected to geographic
     [LAT,LON]=minvtran(mstruct,X,Y);
-    
+
     %write out files
     arcgridwrite(fullfile(pathname,[domain '_grid_lat.asc']),x,y,LAT,'grid_mapping','center','precision',5);
     arcgridwrite(fullfile(pathname,[domain '_grid_lon.asc']),x,y,LON,'grid_mapping','center','precision',5);
@@ -430,13 +434,13 @@ end
 %% In this section we compute the lapse rates, if requested
 
 if FLAG_LR
-    
+
     %create a text file to store lapse rates 
     fileID = fopen(strcat(pathname,'/lapse_rates.txt'),'w');
-    
+
     %load DEM.
     [DEM,R_dem]=geotiffread(fullfile(pathname,demname));
-    
+
     %do temp first
     fprintf(fileID,'temp lapse rates\n');
     months={'jan' 'feb' 'mar' 'apr' 'may' 'jun' 'jul' 'aug' 'sep' 'oct' 'nov' 'dec'};
@@ -447,9 +451,10 @@ if FLAG_LR
         temp_lapse(j)=-p(1);    %use neg to make a pos number. See micromet.f for explanation.
         disp(['absolute value ' months{1} ' temp lapse rate (deg / km) = ' num2str(temp_lapse(j),2)])
         fprintf(fileID,strcat('absolute value ',months{1},' temp lapse rate (deg / km) = ',num2str(temp_lapse(j),2),'\n'));
+
     end
     disp(' ');
-    
+
     %do precip next
     fprintf(fileID,'precip lapse rates\n');
     for j=1:length(months)
