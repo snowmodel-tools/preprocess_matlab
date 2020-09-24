@@ -155,19 +155,28 @@ if FLAG_MET
         %compute wind speed
         SPDtmp=sqrt(Utmp.^2+Vtmp.^2);
 
-        %compute wind direction. 0-360, with 0 being true north! 90 east, etc.
-        DIRtmp=atan2d(Utmp,Vtmp);
-        I=find(DIRtmp>=180);
-        J=find(DIRtmp<180);
-        DIRtmp(I)=DIRtmp(I)-180;
-        DIRtmp(J)=DIRtmp(J)+180;
+        % Now that we have the 0-360 that winds are going TOWARD,
+        % +/- 180 to get the direction winds are coming FROM
+        % Create an empty array of the same size as the DIRtmp
+        DIRfrom = zeros(size(DIRtmp));
+        
+        % For loop change every value in the array using if/else statement
+        for ii = 1:numel(DIRtmp)
+            % When direction is between 180 and 360, subtract 180 to get FROM
+            if DIRtmp(ii) >= 180
+                DIRfrom(ii)=(DIRtmp(ii) - 180);
+            % When direction is less than 180, add 180 to get FROM
+            else
+                DIRfrom(ii)=(DIRtmp(ii) + 180);
+            end
+        end
 
         %put T in C
         Ttmp=Ttmp-273.16;
 
         data=[y(j)*ones(size(ID)) m(j)*ones(size(ID)) d(j)*ones(size(ID)) ...
             h(j)*ones(size(ID)) ID X(:) Y(:) elev(:) Ttmp(:) RHtmp(:) SPDtmp(:) ...
-            DIRtmp(:) Prtmp(:)];
+            DIRfrom(:) Prtmp(:)];
 
         %remove data at points with neg elevations
         data(I,:)=[];
