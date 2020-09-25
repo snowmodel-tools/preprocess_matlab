@@ -22,6 +22,7 @@
 %created by David Hill (dfh@oregonstate.edu)
 %June 2019
 %FLAG_MET_EXTRA added by Nina, Dec 2019
+%Wind_dir fixed (direction FROM not TO) Sep 2020
 
 %NOTE: you will need arcgridwrite from the file exchange
 
@@ -156,9 +157,9 @@ if FLAG_MET
 
         %compute wind direction. 0-360, with 0 being true north! 90 east, etc.
         DIRtmp=atan2d(Utmp,Vtmp);
-        I=find(DIRtmp>=180);
+        K=find(DIRtmp>=180);
         J=find(DIRtmp<180);
-        DIRtmp(I)=DIRtmp(I)-180;
+        DIRtmp(K)=DIRtmp(K)-180;
         DIRtmp(J)=DIRtmp(J)+180;
 
         %put T in C
