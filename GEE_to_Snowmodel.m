@@ -155,6 +155,11 @@ if FLAG_MET
         %compute wind speed
         SPDtmp=sqrt(Utmp.^2+Vtmp.^2);
 
+        %compute wind direction. 0-360, with 0 being true north! 90 east, etc.
+        %this computes directions winds are going TOWARD
+        DIRtmp=atan2d(Utmp,Vtmp);
+        DIRtmp(DIRtmp<=0)=DIRtmp(DIRtmp<=0)+360;
+        
         % Now that we have the 0-360 that winds are going TOWARD,
         % +/- 180 to get the direction winds are coming FROM
         % Create an empty array of the same size as the DIRtmp
